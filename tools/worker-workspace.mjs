@@ -43,8 +43,13 @@ const STATE_DIR = '.worker-state';
 const IGNORED_DIRS = new Set(['.attic', '.git', 'node_modules', '__pycache__', STATE_DIR]);
 // Dotenv files commonly contain live provider credentials and deployment secrets.
 // Never replicate them into agent staging, even when they are inside a subfolder.
+const SENSITIVE_CONTEXT_FILES = new Set([
+  '.npmrc', '.netrc', '.pypirc', '.git-credentials',
+]);
+// These commonly store plaintext registry, network or VCS credentials.
+// Treat every occurrence as sensitive, including files in nested folders.
 function isSensitiveContextFile(name) {
-  return name === '.env' || name.startsWith('.env.');
+  return name === '.env' || name.startsWith('.env.') || SENSITIVE_CONTEXT_FILES.has(name);
 }
 export const ABSENT = 'ABSENT';
 const JOB_ID_RE = /^[0-9a-f]{12}$/;
@@ -560,7 +565,7 @@ function checkScopeClaims(root, rels) {
   for (const rel of rels) {
     const norm = canonicalRelpath(root, rel);
     if (norm.split(SEP).some(isSensitiveContextFile)) {
-      throw new GuardError(`dotenv files cannot be assigned to AI workers: ${rel}`);
+      throw new GuardError(`credential files cannot be assigned to AI workers: ${rel}`);
     }
     const [, full] = safeRelpath(root, norm);
     if (isDir(full)) throw new GuardError(`claimed path is a directory: ${rel}`);
