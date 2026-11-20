@@ -1,0 +1,33 @@
+name: Worker security regression tests
+
+on:
+  push:
+    branches:
+      - security/**
+  pull_request:
+    paths:
+      - 'tools/worker-workspace.mjs'
+      - 'tools/test-worker-*.mjs'
+      - '.github/workflows/worker-security.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  worker-security:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node: [18, 22]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Worker workspace tests
+        run: node tools/test-worker-workspace.mjs
+      - name: Adversarial worker tests
+        run: node tools/test-worker-adversarial.mjs
