@@ -49,6 +49,31 @@ function assertGuardError(run, pattern) {
 }
 
 const cases = [
+  ['dotenv secrets are excluded from worker staging, including nested directories', async c => {
+    c.write('.env', 'OPENAI_API_KEY=fictional-test-secret\\n');
+    c.write('.env.production', 'DATABASE_URL=fictional-test-value\\n');
+    c.write('nested/.env.local', 'TOKEN=fictional-test-secret\\n');
+    c.write('nested/README.md', 'safe documentation\\n');
+    const j = await c.prepare('codex', ['a.txt']);
+    for (const rel of ['.env', '.env.production', 'nested/.env.local']) {
+      assert.equal(lexists(path.join(c.workspace(j), rel)), false, rel + ' must not be copied');
+      assert.equal(lexists(path.join(c.root, rel)), true, rel + ' must remain in the original');
+    }
+    assert.equal(fs.readFileSync(path.join(c.workspace(j), 'nested/README.md'), 'utf8'), 'safe documentation\\n');
+    stage(c, j, 'a.txt', 'alpha updated\\n');
+    await c.apply(j.id);
+    assert.equal(c.read('a.txt'), 'alpha updated\\n');
+    assert.equal(c.read('.env'), 'OPENAI_API_KEY=fictional-test-secret\\n');
+  }],
+
+  ['dotenv files cannot be explicitly assigned to worker write scopes', async c => {
+    for (const filename of ['.env', '.env.production', 'nested/.env.local']) {
+      c.write(filename, 'fake-secret\\n');
+      await c.prepare('codex', [filename], 1);
+    }
+    assert.deepEqual(jobIds(c), []);
+  }],
+
   // -- cross-job ancestor / descendant claims on NEW paths ---------------
 
   ['second job cannot claim descendant of claimed new path', async c => {
