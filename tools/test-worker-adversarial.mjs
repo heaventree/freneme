@@ -49,6 +49,29 @@ function assertGuardError(run, pattern) {
 }
 
 const cases = [
+  ['common plaintext credentials are excluded from worker staging', async c => {
+    const sensitive = ['.npmrc', '.netrc', '.pypirc', '.git-credentials', 'nested/.npmrc'];
+    for (const name of sensitive) c.write(name, 'fictional-test-credential\\n');
+    c.write('nested/README.md', 'public development notes\\n');
+    const job = await c.prepare('codex', ['a.txt']);
+    for (const name of sensitive) {
+      assert.equal(lexists(path.join(c.workspace(job), name)), false, name + ' should not be staged');
+      assert.equal(fs.readFileSync(path.join(c.root, name), 'utf8'), 'fictional-test-credential\\n');
+    }
+    assert.equal(fs.readFileSync(path.join(c.workspace(job), 'nested/README.md'), 'utf8'), 'public development notes\\n');
+    stage(c, job, 'a.txt', 'updated alpha\\n');
+    await c.apply(job.id);
+    assert.equal(c.read('a.txt'), 'updated alpha\\n');
+  }],
+
+  ['common plaintext credentials cannot be claimed for AI write jobs', async c => {
+    for (const name of ['.npmrc', '.netrc', '.pypirc', '.git-credentials', 'nested/.npmrc']) {
+      c.write(name, 'fictional-test-credential\\n');
+      await c.prepare('codex', [name], 1);
+    }
+    assert.deepEqual(jobIds(c), []);
+  }],
+
   ['dotenv secrets are excluded from worker staging, including nested directories', async c => {
     c.write('.env', 'OPENAI_API_KEY=fictional-test-secret\\n');
     c.write('.env.production', 'DATABASE_URL=fictional-test-value\\n');
