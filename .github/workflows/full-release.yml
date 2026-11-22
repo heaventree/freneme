@@ -1,0 +1,35 @@
+name: Full offline release validation
+on:
+  push:
+    branches: [security/**, release/**]
+    paths:
+      - 'tools/**'
+      - 'snitch/**'
+      - 'install.mjs'
+      - '.github/workflows/full-release.yml'
+  pull_request:
+    paths:
+      - 'tools/**'
+      - 'snitch/**'
+      - 'install.mjs'
+      - '.github/workflows/full-release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-release:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Full offline test suite (no browser or live accounts)
+        run: node tools/check-release.mjs --skip-browser
