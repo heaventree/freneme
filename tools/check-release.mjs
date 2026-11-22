@@ -18,6 +18,7 @@ const IGNORED = new Set(['.attic', '.git', '.worker-state', '.worker-verificatio
 const SUITES = [
   ['approved-project-policy', 'tools/test-project-policy.mjs'],
   ['approved-project-mcp-relay', 'tools/test-project-policy-relay.mjs'],
+  ['relay-child-credential-boundary', 'tools/test-child-env.mjs'],
   ['worker-job-status', 'tools/test-worker-status.mjs'],
   ['fresh-install', 'tools/test-install.mjs'],
   ['worker-guard', 'tools/test-worker-workspace.mjs'],

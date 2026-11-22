@@ -3,12 +3,16 @@ name: Worker security regression tests
 on:
   push:
     branches:
-      - security/**
+      - main
   pull_request:
     paths:
       - 'tools/worker-workspace.mjs'
       - 'tools/test-worker-*.mjs'
       - '.github/workflows/worker-security.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -31,6 +35,8 @@ jobs:
         run: node tools/test-project-policy.mjs
       - name: Project boundary MCP relay tests
         run: node tools/test-project-policy-relay.mjs
+      - name: Child credential boundary checks
+        run: node tools/test-child-env.mjs
       - name: Worker workspace tests
         run: node tools/test-worker-workspace.mjs
       - name: Adversarial worker tests

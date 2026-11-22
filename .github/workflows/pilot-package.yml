@@ -1,0 +1,50 @@
+name: Pilot package smoke test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Rebuild integrity manifest for this exact commit
+        run: node tools/manifest.mjs
+      - name: Validate unpacked installer
+        run: node install.mjs --check
+      - name: Package verified source
+        run: node tools/package-release.mjs "$RUNNER_TEMP/Freneme-HT-Pilot.zip"
+      - name: Verify release ZIP and safe install
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/release-unpacked"
+          cd "$RUNNER_TEMP/release-unpacked"
+          unzip -q "$RUNNER_TEMP/Freneme-HT-Pilot.zip"
+          cd frenemy-2.0.0
+          node install.mjs --check
+          node install.mjs --no-connect --no-snitch --prefix "$RUNNER_TEMP/freneme-test-install"
+          test -f "$RUNNER_TEMP/freneme-test-install/tools/relay-core.mjs"
+      - name: Upload disposable pilot package and hash
+        uses: actions/upload-artifact@v4
+        with:
+          name: Freneme-HT-Pilot-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/Freneme-HT-Pilot.zip
+            ${{ runner.temp }}/Freneme-HT-Pilot.zip.sha256
+          if-no-files-found: error
+          retention-days: 7
