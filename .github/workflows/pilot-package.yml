@@ -31,6 +31,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/release-unpacked"
           cd "$RUNNER_TEMP/release-unpacked"
           unzip -q "$RUNNER_TEMP/Freneme-HT-Pilot.zip"
+          cd frenemy-2.0.0
           node install.mjs --check
           node install.mjs --no-connect --no-snitch --prefix "$RUNNER_TEMP/freneme-test-install"
           test -f "$RUNNER_TEMP/freneme-test-install/tools/relay-core.mjs"
