@@ -1,7 +1,7 @@
 name: Full offline release validation
 on:
   push:
-    branches: [security/**, release/**]
+    branches: [main]
     paths:
       - 'tools/**'
       - 'snitch/**'
@@ -14,6 +14,10 @@ on:
       - 'install.mjs'
       - '.github/workflows/full-release.yml'
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
