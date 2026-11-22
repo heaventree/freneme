@@ -3,12 +3,16 @@ name: Worker security regression tests
 on:
   push:
     branches:
-      - security/**
+      - main
   pull_request:
     paths:
       - 'tools/worker-workspace.mjs'
       - 'tools/test-worker-*.mjs'
       - '.github/workflows/worker-security.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
