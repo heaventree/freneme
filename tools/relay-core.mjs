@@ -2,6 +2,7 @@
 import { statSync } from "node:fs";
 import { isAbsolute } from "node:path";
 import { randomBytes } from "node:crypto";
+import { checkProjectAccess } from "./project-policy.mjs";
 import { fleetJob } from "./fleet-report.mjs";
 import { prepareWorker, jobCommand, jobTools, guardChildren } from "./worker-guard.mjs";
 import { WIN, spawnCli, processSnapshot, ownedTree, stillOwned, signalOwned, stopWindowsTree } from "./platform.mjs";
@@ -310,6 +311,8 @@ export function serve(cfg) {
         const action = tool.name.slice('crew_job_'.length);
         try {
           if (typeof a.working_directory !== 'string' || !isAbsolute(a.working_directory) || !statSync(a.working_directory).isDirectory()) throw new Error('Existing absolute working_directory required.');
+          const permission = checkProjectAccess(a.working_directory);
+          if (!permission.ok) throw new Error(permission.reason);
           if (action !== 'status' && !/^[0-9a-f]{12}$/.test(a.job || '')) throw new Error('Valid job ID required.');
           if (['abandon','recover'].includes(action) && a.stopped !== true) throw new Error('Confirm the old worker has stopped before releasing ownership.');
           return reply(id,{content:[{type:'text',text:await jobCommand(action,a.working_directory,a.job,a.stopped)}]});
@@ -328,6 +331,10 @@ export function serve(cfg) {
         try { valid = valid && statSync(working_directory).isDirectory(); } catch { valid = false; }
         if (!valid) return reply(id, { content: [{type:"text",text:"working_directory must be an existing absolute directory"}], isError:true });
       }
+      const projectPermission = checkProjectAccess(working_directory);
+      if (!projectPermission.ok) return reply(id, {
+        content: [{ type: "text", text: projectPermission.reason }], isError: true,
+      });
       if (requests.has(id)) return reply(id, {content:[{type:"text",text:"Duplicate active request ID"}],isError:true});
       const controller = new AbortController();
       requests.set(id, controller);

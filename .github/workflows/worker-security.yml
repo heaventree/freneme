@@ -27,6 +27,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
+      - name: Project boundary tests
+        run: node tools/test-project-policy.mjs
+      - name: Project boundary MCP relay tests
+        run: node tools/test-project-policy-relay.mjs
       - name: Worker workspace tests
         run: node tools/test-worker-workspace.mjs
       - name: Adversarial worker tests
