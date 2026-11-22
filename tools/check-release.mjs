@@ -17,6 +17,7 @@ const IGNORED = new Set(['.attic', '.git', '.worker-state', '.worker-verificatio
 // The test suites, by the name each one has in the results.
 const SUITES = [
   ['approved-project-policy', 'tools/test-project-policy.mjs'],
+  ['approved-project-mcp-relay', 'tools/test-project-policy-relay.mjs'],
   ['worker-job-status', 'tools/test-worker-status.mjs'],
   ['fresh-install', 'tools/test-install.mjs'],
   ['worker-guard', 'tools/test-worker-workspace.mjs'],
