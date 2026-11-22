@@ -51,7 +51,9 @@ export function fleetJob({ agent, driver, title, prompt, maxSilenceS, cwd, watch
 
   const args = ["start", id, "--agent", agent, "--driver", driver, "--title", note(title, 60)];
   if (watch) args.push("--watch", watch);
-  if (prompt) args.push("--note", note(prompt));
+  // Never put the prompt into process arguments or persistent job history.
+  // A short prompt may still contain passwords, API keys or client data.
+  if (prompt) args.push("--note", "Prompt omitted for privacy");
   if (maxSilenceS) args.push("--max-silence", String(maxSilenceS));
   args.push("--beat-every", String(Math.round(BEAT_MS / 1000)));
   fleetCall(args, cwd);
