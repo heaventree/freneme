@@ -27,6 +27,7 @@ const SUITES = [
   ['relay-shutdown', 'tools/test-relay-shutdown.mjs'],
   ['relay-native-session-lifecycle', 'snitch/test/relay-session.test.mjs'],
   ['agy-quota-flow', 'tools/test-agy-quota.mjs'],
+  ['fleet-prompt-privacy', 'tools/test-fleet-privacy.mjs'],
   ['fleet-writer-hooks', 'snitch/test/fleet.test.mjs'],
   ['fleet-command-lifecycle', 'snitch/test/run-job.test.mjs'],
   ['background-log-resolution', 'snitch/test/background-log.test.mjs'],
